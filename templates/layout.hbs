@@ -1,0 +1,145 @@
+<!-- templates/emails/layout.handlebars -->
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{title}}</title>
+  <style>
+    /* Swedish colors palette */
+    :root {
+      --swedish-blue: #005293;
+      --swedish-yellow: #FECC00;
+      --light-blue: #E1F0F9;
+      --dark-blue: #003A65;
+      --neutral-gray: #F0F0F0;
+      --text-dark: #333333;
+      --text-light: #FFFFFF;
+    }
+    
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: var(--neutral-gray);
+      color: var(--text-dark);
+      line-height: 1.6;
+    }
+    
+    .email-container {
+      max-width: 600px;
+      margin: 0 auto;
+      background-color: white;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+    }
+    
+    .email-header {
+      background-color: var(--swedish-blue);
+      padding: 20px;
+      text-align: center;
+    }
+    
+    .logo {
+      width: 120px;
+      height: auto;
+    }
+    
+    .email-header h1 {
+      color: var(--text-light);
+      margin: 10px 0 0;
+      font-size: 24px;
+      font-weight: 600;
+    }
+    
+    .email-body {
+      padding: 30px;
+      background-color: white;
+    }
+    
+    .email-footer {
+      background-color: var(--light-blue);
+      padding: 20px;
+      text-align: center;
+      font-size: 14px;
+      color: var(--dark-blue);
+      border-top: 4px solid var(--swedish-yellow);
+    }
+    
+    .button {
+      display: inline-block;
+      background-color: var(--swedish-blue);
+      color: var(--text-light);
+      text-decoration: none;
+      padding: 12px 30px;
+      border-radius: 4px;
+      font-weight: 600;
+      margin: 20px 0;
+      border: none;
+      text-align: center;
+      transition: background-color 0.3s;
+    }
+    
+    .button:hover {
+      background-color: var(--dark-blue);
+    }
+    
+    .verification-code {
+      font-size: 28px;
+      font-weight: bold;
+      letter-spacing: 2px;
+      color: var(--dark-blue);
+      background-color: var(--light-blue);
+      padding: 15px;
+      border-radius: 4px;
+      margin: 20px 0;
+      text-align: center;
+      border-left: 4px solid var(--swedish-yellow);
+    }
+    
+    .text-center {
+      text-align: center;
+    }
+    
+    .highlight {
+      color: var(--swedish-blue);
+      font-weight: 600;
+    }
+    
+    .contact-info {
+      margin-top: 20px;
+      font-size: 14px;
+    }
+    
+    .social-icons {
+      margin-top: 15px;
+    }
+    
+    .social-icons a {
+      display: inline-block;
+      margin: 0 8px;
+      color: var(--swedish-blue);
+    }
+  </style>
+</head>
+<body>
+  <div class="email-container">
+    <div class="email-header">
+      <h1>{{appName}}</h1>
+    </div>
+    
+    <div class="email-body">
+      {{{body}}}
+    </div>
+    
+    <div class="email-footer">
+      <p>&copy; {{currentYear}} {{appName}}. All rights reserved.</p>
+      <p>If you didn't request this email, please ignore it.</p>
+      <div class="contact-info">
+        <p>Need help? Contact us at <a href="mailto:support@example.com">support@example.com</a></p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
