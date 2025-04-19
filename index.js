@@ -12,9 +12,13 @@ const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
-// Sample route
-router.get('/', (req, res) => {
-  res.send('Welcome to the API');
+// Root route
+app.get('/', (req, res) => {
+  res.json({
+    message: 'Welcome to the News Website API',
+    status: 'Server is running',
+    documentation: '/api-docs'
+  });
 });
 
 // Routes
