@@ -124,3 +124,25 @@ exports.sendWelcomeEmail = async (email) => {
     }
   });
 };
+
+/**
+ * Send contact form submission email to admin
+ * @param {Object} contactData - Contact form data
+ */
+exports.sendContactFormEmail = async (contactData) => {
+  const { firstName, lastName, email, phone, message } = contactData;
+  
+  await exports.sendTemplatedEmail({
+    to: process.env.ADMIN_EMAIL || 'ibraheem45622@gmail.com',
+    subject: 'New Contact Form Submission',
+    template: 'contact-form',
+    context: {
+      firstName,
+      lastName,
+      email,
+      phone,
+      message,
+      submissionDate: new Date().toLocaleString()
+    }
+  });
+};
