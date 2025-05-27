@@ -1,5 +1,5 @@
 // controllers/contactController.js
-const { sendContactFormEmail } = require('../utils/email');
+const { sendContactFormEmail, sendContactAcknowledgementEmail } = require('../utils/email');
 
 /**
  * Handle contact form submission
@@ -17,24 +17,49 @@ exports.submitContactForm = async (req, res) => {
       });
     }
     
-    // Send email to admin
-    await sendContactFormEmail({
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide a valid email address'
+      });
+    }
+    
+    const contactData = {
       firstName,
       lastName,
       email,
       phone,
       message
-    });
+    };
+    
+    // Send both emails concurrently for better performance
+    await Promise.all([
+      // Send email to admin
+      sendContactFormEmail(contactData),
+      // Send acknowledgement email to user
+      sendContactAcknowledgementEmail(contactData)
+    ]);
     
     res.status(200).json({
       success: true,
-      message: 'Your message has been sent successfully'
+      message: 'Your message has been sent successfully. You will receive a confirmation email shortly.'
     });
   } catch (error) {
     console.error('Contact form submission error:', error);
+    
+    // Check if it's an email sending error
+    if (error.code === 'EAUTH' || error.code === 'ECONNECTION') {
+      return res.status(500).json({
+        success: false,
+        message: 'Email service is currently unavailable. Please try again later.'
+      });
+    }
+    
     res.status(500).json({
       success: false,
-      message: 'Error sending your message',
+      message: 'Error sending your message. Please try again.',
       error: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }

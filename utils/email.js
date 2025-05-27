@@ -6,7 +6,6 @@ const path = require('path');
 
 // Create reusable transporter
 const transporter = nodemailer.createTransport({
-  service: 'gmail',  // Added service specification
   host: process.env.EMAIL_HOST,
   port: process.env.EMAIL_PORT,
   secure: process.env.EMAIL_SECURE === 'true',
@@ -15,7 +14,7 @@ const transporter = nodemailer.createTransport({
     pass: process.env.EMAIL_PASS
   },
   tls: {
-    rejectUnauthorized: false  // Added for local development
+    rejectUnauthorized: false  // Added for compatibility
   }
 });
 
@@ -54,7 +53,7 @@ exports.sendTemplatedEmail = async ({ to, subject, template, context }) => {
     const layoutContext = {
       title: subject,
       body,
-      appName: process.env.APP_NAME || 'NHCS',
+      appName: process.env.APP_NAME || 'Alenalki',
       currentYear: getCurrentYear(),
       ...context
     };
@@ -133,7 +132,7 @@ exports.sendContactFormEmail = async (contactData) => {
   const { firstName, lastName, email, phone, message } = contactData;
   
   await exports.sendTemplatedEmail({
-    to: process.env.ADMIN_EMAIL || 'ibraheem45622@gmail.com',
+    to: process.env.ADMIN_EMAIL || 'info@alenalki.se',
     subject: 'New Contact Form Submission',
     template: 'contact-form',
     context: {
@@ -143,6 +142,25 @@ exports.sendContactFormEmail = async (contactData) => {
       phone,
       message,
       submissionDate: new Date().toLocaleString()
+    }
+  });
+};
+
+/**
+ * Send acknowledgement email to user after contact form submission
+ * @param {Object} contactData - Contact form data
+ */
+exports.sendContactAcknowledgementEmail = async (contactData) => {
+  const { firstName, lastName, email } = contactData;
+  
+  await exports.sendTemplatedEmail({
+    to: email,
+    subject: 'Thank you for contacting us - Message Received',
+    template: 'contact-acknowledgement',
+    context: {
+      firstName,
+      lastName,
+      supportEmail: process.env.ADMIN_EMAIL || 'info@alenalki.se'
     }
   });
 };
