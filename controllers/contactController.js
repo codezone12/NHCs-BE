@@ -44,7 +44,7 @@ exports.submitContactForm = async (req, res) => {
     
     res.status(200).json({
       success: true,
-      message: 'Your message has been sent successfully. You will receive a confirmation email shortly.'
+      message: `Dear ${firstName}, Your message has been sent successfully. You will receive a confirmation email shortly.`
     });
   } catch (error) {
     console.error('Contact form submission error:', error);
