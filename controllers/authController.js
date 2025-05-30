@@ -201,12 +201,20 @@ exports.forgotPassword = async (req, res) => {
 
 /**
  * Reset password
- * @route POST /api/auth/reset-password/:token
+ * @route POST /api/auth/reset-password
  */
 exports.resetPassword = async (req, res) => {
   try {
     const { password } = req.body;
-    const { token } = req.params;
+    // Get token from request body or query parameters instead of route params
+    const token = req.body.token || req.query.token;
+    
+    if (!token) {
+      return res.status(400).json({
+        success: false,
+        message: 'Reset token is required'
+      });
+    }
 
     // Hash the reset token
     const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
@@ -250,16 +258,15 @@ exports.resetPassword = async (req, res) => {
     );
 
     res.status(200).json({
-      success: true,
-      token: jwtToken,
+      status: 'success',
       message: 'Password reset successful'
     });
-  } catch (error) {
+  } catch(error) {
     console.error('Reset password error:', error);
     res.status(500).json({
       success: false,
-      message: 'Error resetting password',
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      message: 'Error processing request',
+      error: process.env.NODE_ENV === 'development'? error.message : undefined
     });
   }
 };
