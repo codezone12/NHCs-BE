@@ -132,7 +132,7 @@ exports.sendContactFormEmail = async (contactData) => {
   const { firstName, lastName, email, phone, message } = contactData;
   
   await exports.sendTemplatedEmail({
-    to: process.env.ADMIN_EMAIL || 'info@alenalki.se',
+    to: process.env.ADMIN_EMAIL || 'codezone67@gmail.com',
     subject: 'New Contact Form Submission',
     template: 'contact-form',
     context: {
