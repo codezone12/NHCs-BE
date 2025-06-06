@@ -48,7 +48,7 @@ exports.sendTemplatedEmail = async ({ to, subject, template, context }) => {
     // Compile the specific template
     const templateCompiled = compileTemplate(template);
     const body = templateCompiled(context);
-    
+
     // Insert the compiled template into layout
     const layoutContext = {
       title: subject,
@@ -57,9 +57,9 @@ exports.sendTemplatedEmail = async ({ to, subject, template, context }) => {
       currentYear: getCurrentYear(),
       ...context
     };
-    
+
     const html = layoutTemplate(layoutContext);
-    
+
     // Send email
     const mailOptions = {
       from: `"${process.env.EMAIL_FROM_NAME}" <${process.env.EMAIL_FROM_ADDRESS}>`,
@@ -67,7 +67,7 @@ exports.sendTemplatedEmail = async ({ to, subject, template, context }) => {
       subject,
       html
     };
-    
+
     const info = await transporter.sendMail(mailOptions);
     console.log('Email sent:', info.messageId);
     return info;
@@ -130,7 +130,7 @@ exports.sendWelcomeEmail = async (email) => {
  */
 exports.sendContactFormEmail = async (contactData) => {
   const { firstName, lastName, email, phone, message } = contactData;
-  
+
   await exports.sendTemplatedEmail({
     to: process.env.ADMIN_EMAIL || 'codezone67@gmail.com',
     subject: 'New Contact Form Submission',
@@ -152,7 +152,7 @@ exports.sendContactFormEmail = async (contactData) => {
  */
 exports.sendContactAcknowledgementEmail = async (contactData) => {
   const { firstName, lastName, email } = contactData;
-  
+
   await exports.sendTemplatedEmail({
     to: email,
     subject: 'Thank you for contacting us - Message Received',
@@ -163,4 +163,74 @@ exports.sendContactAcknowledgementEmail = async (contactData) => {
       supportEmail: process.env.ADMIN_EMAIL || 'info@alenalki.se'
     }
   });
+};
+
+/**
+ * Send newsletter confirmation email
+ * @param {Object} subscriberData - Subscriber data
+ */
+exports.sendNewsletterConfirmationEmail = async (subscriberData) => {
+  const { email, firstName } = subscriberData;
+
+  await exports.sendTemplatedEmail({
+    to: email,
+    subject: 'Welcome to Alenalki Newsletter!',
+    template: 'newsletter-confirmation',
+    context: {
+      firstName: firstName || 'Subscriber',
+      unsubscribeUrl: `${process.env.CLIENT_URL}/unsubscribe?email=${encodeURIComponent(email)}`,
+      supportEmail: process.env.ADMIN_EMAIL || 'info@alenalki.se'
+    }
+  });
+};
+
+/**
+ * Send newsletter to all active subscribers
+ * @param {Object} newsletterData - Newsletter content
+ */
+exports.sendNewsletterToSubscribers = async (newsletterData) => {
+  try {
+    const { subject, content, previewText } = newsletterData;
+
+    // Get all active subscribers in batches to avoid memory issues
+    const batchSize = 100;
+    let skip = 0;
+    let subscriberBatch;
+
+    do {
+      subscriberBatch = await prisma.newsletter.findMany({
+        where: { isActive: true },
+        select: { email: true, firstName: true },
+        skip,
+        take: batchSize
+      });
+
+      if (subscriberBatch.length > 0) {
+        // Send emails in parallel for better performance
+        const emailPromises = subscriberBatch.map(subscriber =>
+          exports.sendTemplatedEmail({
+            to: subscriber.email,
+            subject,
+            template: 'newsletter',
+            context: {
+              firstName: subscriber.firstName || 'Subscriber',
+              content,
+              previewText,
+              unsubscribeUrl: `${process.env.CLIENT_URL}/unsubscribe?email=${encodeURIComponent(subscriber.email)}`
+            }
+          })
+        );
+
+        await Promise.all(emailPromises);
+        console.log(`Sent newsletter to ${subscriberBatch.length} subscribers`);
+      }
+
+      skip += batchSize;
+    } while (subscriberBatch.length === batchSize);
+
+    console.log('Newsletter sent to all active subscribers');
+  } catch (error) {
+    console.error('Newsletter sending error:', error);
+    throw error;
+  }
 };

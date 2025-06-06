@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const authController = require('../controllers/authController');
 const contactController = require('../controllers/contactController');
+const newsletterController = require('../controllers/newsletterController');
 
 // Auth routes
 router.post('/signup', authController.signup);
@@ -14,5 +15,10 @@ router.get('/logout', authController.logout);
 
 // Contact routes
 router.post('/contact', contactController.submitContactForm);
+
+// Newsletter routes
+router.post('/newsletter/subscribe', newsletterController.subscribeToNewsletter);
+router.post('/newsletter/unsubscribe', newsletterController.unsubscribeFromNewsletter);
+router.get('/newsletter/stats', newsletterController.getNewsletterStats);
 
 module.exports = router;
