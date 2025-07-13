@@ -2,15 +2,12 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
-const { PrismaClient } = require('@prisma/client');
+const prisma = require('./../utils/prisma');
 const { 
   sendVerificationEmail, 
   sendPasswordResetEmail, 
   sendWelcomeEmail 
 } = require('../utils/email');
-
-const prisma = new PrismaClient();
-
 /**
  * Register a new user
  * @route POST /api/auth/signup

@@ -16,7 +16,7 @@ const corsOptions = {
     'https://nchs-fe.vercel.app' // Add your actual frontend domain
   ],
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization']
 };
 
@@ -35,7 +35,7 @@ app.get('/', (req, res) => {
 });
 
 // Routes
-app.use('/api/v1/users', routes);
+app.use('/api/v1', routes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

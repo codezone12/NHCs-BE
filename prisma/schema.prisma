@@ -9,17 +9,25 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum UserRole {
+  EDITOR
+  ADMIN
+}
+
 model User {
-  id                     String    @id @default(auto()) @map("_id") @db.ObjectId
-  email                  String    @unique
-  password               String
-  isVerified             Boolean   @default(false)
-  verificationToken      String?
+  id                       String    @id @default(auto()) @map("_id") @db.ObjectId
+  name                     String    @default("Default Name")
+  email                    String    @unique
+  password                 String
+  role                     UserRole  @default(EDITOR)
+  isVerified               Boolean   @default(false)
+  isActive                 Boolean   @default(true)
+  verificationToken        String?
   verificationTokenExpires DateTime?
-  resetPasswordToken     String?
-  resetPasswordExpires   DateTime?
-  createdAt              DateTime  @default(now())
-  updatedAt              DateTime  @updatedAt @default(now())
+  resetPasswordToken       String?
+  resetPasswordExpires     DateTime?
+  createdAt                DateTime  @default(now())
+  updatedAt                DateTime  @updatedAt @default(now())
 
   @@map("users")
 }
@@ -35,4 +43,69 @@ model Newsletter {
   updatedAt   DateTime  @updatedAt @default(now())
 
   @@map("newsletters")
+}
+
+model Event {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  title       String
+  description String
+  date        DateTime
+  location    String?
+  isOnline    Boolean   @default(false)
+  isActive    Boolean   @default(true)
+  imageUrl    String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt @default(now())
+
+  @@map("events")
+}
+
+model FestivalHighlight {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  title       String
+  content     String
+  icon        String    // Store the icon name as a string (e.g., "Globe", "Users")
+  bgColor     String    // Store color class (e.g., "bg-yellow-400")
+  hoverBg     String    // Store hover color class (e.g., "hover:bg-yellow-500")
+  borderColor String    // Store border color class (e.g., "border-yellow-400")
+  textColor   String    // Store text color class (e.g., "text-yellow-600")
+  order       Int       @default(0) // For controlling display order
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt @default(now())
+
+  @@map("festival_highlights")
+}
+
+model FestivalEvent {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  title       String
+  description String
+  date        DateTime
+  location    String?
+  isOnline    Boolean   @default(false)
+  isActive    Boolean   @default(true)
+  imageUrl    String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt @default(now())
+
+  @@map("festival_events")
+}
+
+model Transportation {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  type        String    // "public", "car", etc.
+  title       String    // "Med kollektivtrafik", "Med bil", etc.
+  icon        String    // Store the icon name as a string (e.g., "Train", "Car")
+  bgColor     String    // Store color class (e.g., "bg-blue-50")
+  textColor   String    // Store text color class (e.g., "text-blue-900")
+  details     Json      // Array of objects with label and value
+  tip         String?   // Optional tip text
+  tipColor    String?   // Optional tip color class
+  order       Int       @default(0) // For controlling display order
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt @default(now())
+
+  @@map("transportations")
 }

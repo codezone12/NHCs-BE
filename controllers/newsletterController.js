@@ -1,8 +1,6 @@
 // controllers/newsletterController.js
-const { PrismaClient } = require('@prisma/client');
+const prisma = require('./../utils/prisma');
 const { sendNewsletterConfirmationEmail } = require('../utils/email');
-
-const prisma = new PrismaClient();
 
 /**
  * Handle newsletter subscription
