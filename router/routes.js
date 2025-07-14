@@ -8,6 +8,7 @@ const eventController = require('../controllers/eventController');
 const festivalHighlightController = require('../controllers/festivalHighlightController');
 const festivalEventController = require('../controllers/festivalEventController');
 const transportationController = require('../controllers/transportationController');
+const newsController = require('../controllers/newsController');
 
 // Auth routes
 router.post('/signup', authController.signup);
@@ -67,5 +68,16 @@ router.get('/transportations/:id', transportationController.getTransportationByI
 router.put('/transportations/:id', transportationController.updateTransportation);              // Update transportation option
 router.patch('/transportations/:id/toggle-status', transportationController.toggleTransportationStatus); // Toggle active status
 router.delete('/transportations/:id', transportationController.deleteTransportation);           // Delete transportation option
+
+// News routes
+router.post('/news', newsController.createNews);                 // Create news
+router.get('/news', newsController.getAllNews);                  // Get all news with pagination
+router.get('/news/public', newsController.getPublicNews);        // Get public news (active only)
+router.get('/news/trending', newsController.getTrendingNews);    // Get trending news
+router.get('/news/:id', newsController.getNewsById);             // Get news by ID
+router.put('/news/:id', newsController.updateNews);              // Update news
+router.patch('/news/:id/toggle-status', newsController.toggleNewsStatus); // Toggle active status
+router.patch('/news/:id/toggle-trending', newsController.toggleTrendingStatus); // Toggle trending status
+router.delete('/news/:id', newsController.deleteNews);           // Delete news
 
 module.exports = router;
