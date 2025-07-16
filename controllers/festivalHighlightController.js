@@ -27,7 +27,7 @@ exports.createFestivalHighlight = async (req, res) => {
         hoverBg: hoverBg || 'hover:bg-blue-600',
         borderColor: borderColor || 'border-blue-500',
         textColor: textColor || 'text-blue-600',
-        order: order || 0,
+        order: parseInt(order) || 0,
         isActive: isActive !== undefined ? Boolean(isActive) : true
       }
     });

@@ -316,6 +316,60 @@ exports.updateUser = async (req, res) => {
 };
 
 /**
+ * Update user password
+ * @route PATCH /api/users/:id/password
+ */
+exports.updateUserPassword = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { password } = req.body;
+    
+    // Validate required fields
+    if (!password) {
+      return res.status(400).json({
+        success: false,
+        message: 'Password is required'
+      });
+    }
+    
+    // Check if user exists
+    const existingUser = await prisma.user.findUnique({
+      where: { id },
+      select: { id: true, email: true, name: true }
+    });
+    
+    if (!existingUser) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+    
+    // Hash new password
+    const hashedPassword = await bcrypt.hash(password, 10);
+    
+    // Update user password
+    await prisma.user.update({
+      where: { id },
+      data: { password: hashedPassword }
+    });
+    
+    res.status(200).json({
+      success: true,
+      message: 'Password updated successfully',
+      data: { id: existingUser.id }
+    });
+  } catch (error) {
+    console.error('Update password error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error updating password',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+};
+
+/**
  * Toggle user active status
  * @route PATCH /api/users/:id/toggle-status
  */

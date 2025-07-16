@@ -26,6 +26,7 @@ router.post('/user/', userController.createUser);                    // Create u
 router.get('/user/', userController.getUsers);                       // Get all users with pagination
 router.get('/user/:id', userController.getUserById);                 // Get user by ID
 router.put('/user/:id', userController.updateUser);                  // Update user (all fields optional)
+router.patch('/user/:id/password', userController.updateUserPassword); // Update user password
 router.patch('/user/:id/toggle-status', userController.toggleUserStatus); // Toggle active status
 router.delete('/user/:id', userController.deleteUser);               // Delete user
 

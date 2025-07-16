@@ -50,15 +50,15 @@ exports.createEvent = async (req, res) => {
  */
 exports.getEvents = async (req, res) => {
   try {
-    const { active, upcoming, past, page = 1, limit = 10 } = req.query;
+    const { isActive, upcoming, past, page = 1, limit = 10, sort } = req.query;
     const skip = (parseInt(page) - 1) * parseInt(limit);
     
     // Build where clause
     const where = {};
     
     // Filter by active status if specified
-    if (active !== undefined) {
-      where.isActive = active === 'true';
+    if (isActive !== undefined) {
+      where.isActive = isActive === 'true';
     }
     
     // Filter by date for upcoming or past events
@@ -69,13 +69,22 @@ exports.getEvents = async (req, res) => {
       where.date = { lt: now };
     }
     
+    // Parse sort parameter
+    let orderBy = { date: 'asc' };
+    if (sort) {
+      const [field, direction] = sort.split(':');
+      if (field && direction) {
+        orderBy = { [field]: direction };
+      }
+    }
+    
     // Get events with pagination
     const [events, total] = await Promise.all([
       prisma.event.findMany({
         where,
         skip,
         take: parseInt(limit),
-        orderBy: { date: 'asc' }
+        orderBy
       }),
       prisma.event.count({ where })
     ]);

@@ -86,7 +86,7 @@ exports.login = async (req, res) => {
     if (!user) {
       return res.status(401).json({
         success: false,
-        message: 'Invalid credentials'
+        message: 'User does not exists'
       });
     }
 
@@ -96,6 +96,13 @@ exports.login = async (req, res) => {
       return res.status(401).json({
         success: false,
         message: 'Invalid credentials'
+      });
+    }
+
+    if (user.isActive === false) {
+      return res.status(401).json({
+        success: false,
+        message: 'Your account is not active please contact admin'
       });
     }
 

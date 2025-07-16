@@ -103,7 +103,7 @@ exports.getTransportationById = async (req, res) => {
     const { id } = req.params;
     
     const transportation = await prisma.transportation.findUnique({
-      where: { id: parseInt(id) }
+      where: { id }
     });
 
     if (!transportation) {
@@ -201,7 +201,7 @@ exports.updateTransportation = async (req, res) => {
 
     // Check if transportation exists
     const existingTransportation = await prisma.transportation.findUnique({
-      where: { id: parseInt(id) }
+      where: { id }
     });
 
     if (!existingTransportation) {
@@ -213,7 +213,7 @@ exports.updateTransportation = async (req, res) => {
 
     // Update transportation
     const updatedTransportation = await prisma.transportation.update({
-      where: { id: parseInt(id) },
+      where: { id },
       data: {
         ...(type !== undefined && { type }),
         ...(title !== undefined && { title }),
@@ -250,7 +250,7 @@ exports.deleteTransportation = async (req, res) => {
 
     // Check if transportation exists
     const existingTransportation = await prisma.transportation.findUnique({
-      where: { id: parseInt(id) }
+      where: { id }
     });
 
     if (!existingTransportation) {
@@ -262,7 +262,7 @@ exports.deleteTransportation = async (req, res) => {
 
     // Delete transportation
     await prisma.transportation.delete({
-      where: { id: parseInt(id) }
+      where: { id }
     });
 
     return res.status(200).json({
@@ -286,7 +286,7 @@ exports.toggleTransportationStatus = async (req, res) => {
 
     // Check if transportation exists
     const existingTransportation = await prisma.transportation.findUnique({
-      where: { id: parseInt(id) }
+      where: { id }
     });
 
     if (!existingTransportation) {
@@ -298,7 +298,7 @@ exports.toggleTransportationStatus = async (req, res) => {
 
     // Toggle status
     const updatedTransportation = await prisma.transportation.update({
-      where: { id: parseInt(id) },
+      where: { id },
       data: {
         isActive: !existingTransportation.isActive
       }
