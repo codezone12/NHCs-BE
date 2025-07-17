@@ -110,11 +110,28 @@ model Transportation {
   @@map("transportations")
 }
 
+model Blog {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  title       String
+  content     String
+  category    String
+  pdfUrl      String?   // URL to the uploaded PDF file on Cloudinary
+  isActive    Boolean   @default(true)
+  isFeatured  Boolean   @default(false)
+  authorId    String?   @db.ObjectId
+  authorName  String?   // Store author name directly for flexibility
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt @default(now())
+
+  @@map("blogs")
+}
+
 model News {
   id          String    @id @default(auto()) @map("_id") @db.ObjectId
   title       String
   content     String
   category    String
+  imageUrl    String?
   isTrending  Boolean   @default(false)
   isActive    Boolean   @default(true)
   createdAt   DateTime  @default(now())

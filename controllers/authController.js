@@ -133,11 +133,19 @@ exports.login = async (req, res) => {
     // Remove password from output
     const { password: _, ...userWithoutPassword } = user;
 
+    // Store user data in localStorage for frontend access
+    const userData = {
+      id: user.id, // MongoDB ObjectID
+      name: user.name,
+      email: user.email,
+      role: user.role
+    };
+
     res.status(200).json({
       success: true,
       token,
       data: {
-        user: userWithoutPassword
+        user: userData
       }
     });
   } catch (error) {

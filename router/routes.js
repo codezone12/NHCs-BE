@@ -9,6 +9,12 @@ const festivalHighlightController = require('../controllers/festivalHighlightCon
 const festivalEventController = require('../controllers/festivalEventController');
 const transportationController = require('../controllers/transportationController');
 const newsController = require('../controllers/newsController');
+const blogController = require('../controllers/blogController');
+const multer = require('multer');
+
+// Configure multer for memory storage (for Cloudinary uploads)
+const storage = multer.memoryStorage();
+const upload = multer({ storage });
 
 // Auth routes
 router.post('/signup', authController.signup);
@@ -71,14 +77,25 @@ router.patch('/transportations/:id/toggle-status', transportationController.togg
 router.delete('/transportations/:id', transportationController.deleteTransportation);           // Delete transportation option
 
 // News routes
-router.post('/news', newsController.createNews);                 // Create news
+router.post('/news', upload.single('imageFile'), newsController.createNews);                 // Create news with optional image upload
 router.get('/news', newsController.getAllNews);                  // Get all news with pagination
 router.get('/news/public', newsController.getPublicNews);        // Get public news (active only)
 router.get('/news/trending', newsController.getTrendingNews);    // Get trending news
 router.get('/news/:id', newsController.getNewsById);             // Get news by ID
-router.put('/news/:id', newsController.updateNews);              // Update news
+router.put('/news/:id', upload.single('imageFile'), newsController.updateNews);              // Update news with optional image upload
 router.patch('/news/:id/toggle-status', newsController.toggleNewsStatus); // Toggle active status
 router.patch('/news/:id/toggle-trending', newsController.toggleTrendingStatus); // Toggle trending status
 router.delete('/news/:id', newsController.deleteNews);           // Delete news
+
+// Blog routes
+router.post('/blogs', upload.single('pdfFile'), blogController.createBlog);                 // Create blog with optional PDF upload
+router.get('/blogs', blogController.getAllBlogs);                  // Get all blogs with pagination
+router.get('/blogs/public', blogController.getPublicBlogs);        // Get public blogs (active only)
+router.get('/blogs/featured', blogController.getFeaturedBlogs);    // Get featured blogs
+router.get('/blogs/:id', blogController.getBlogById);             // Get blog by ID
+router.put('/blogs/:id', upload.single('pdfFile'), blogController.updateBlog);              // Update blog with optional PDF upload
+router.patch('/blogs/:id/toggle-status', blogController.toggleBlogStatus); // Toggle active status
+router.patch('/blogs/:id/toggle-featured', blogController.toggleFeaturedStatus); // Toggle featured status
+router.delete('/blogs/:id', blogController.deleteBlog);           // Delete blog
 
 module.exports = router;

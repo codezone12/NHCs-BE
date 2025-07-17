@@ -1,10 +1,17 @@
-// controllers/newsController.js
+// controllers/blogController.js
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 const cloudinary = require('cloudinary').v2;
 
-// Get all news with filtering and pagination
-exports.getAllNews = async (req, res) => {
+// Configure Cloudinary
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+// Get all blogs with filtering and pagination
+exports.getAllBlogs = async (req, res) => {
   try {
     const {
       page = 1,
@@ -12,7 +19,7 @@ exports.getAllNews = async (req, res) => {
       search = '',
       active,
       category,
-      trending,
+      featured,
       sortBy = 'createdAt',
       sortOrder = 'desc'
     } = req.query;
@@ -22,7 +29,7 @@ exports.getAllNews = async (req, res) => {
     const limitNum = parseInt(limit);
     const skip = (pageNum - 1) * limitNum;
     const isActive = active === 'true' ? true : active === 'false' ? false : undefined;
-    const isTrending = trending === 'true' ? true : trending === 'false' ? false : undefined;
+    const isFeatured = featured === 'true' ? true : featured === 'false' ? false : undefined;
 
     // Build filter object
     const filter = {
@@ -35,7 +42,7 @@ exports.getAllNews = async (req, res) => {
           ]
         }),
         ...(isActive !== undefined && { isActive }),
-        ...(isTrending !== undefined && { isTrending }),
+        ...(isFeatured !== undefined && { isFeatured }),
         ...(category && { category: { contains: category, mode: 'insensitive' } })
       },
       orderBy: {
@@ -44,11 +51,11 @@ exports.getAllNews = async (req, res) => {
     };
 
     // Count total records with filter
-    const totalCount = await prisma.news.count(filter);
+    const totalCount = await prisma.blog.count(filter);
     const totalPages = Math.ceil(totalCount / limitNum);
 
     // Get records with pagination
-    const news = await prisma.news.findMany({
+    const blogs = await prisma.blog.findMany({
       ...filter,
       skip,
       take: limitNum
@@ -57,7 +64,7 @@ exports.getAllNews = async (req, res) => {
     return res.status(200).json({
       success: true,
       data: {
-        news,
+        blogs,
         pagination: {
           total: totalCount,
           pages: totalPages,
@@ -65,39 +72,39 @@ exports.getAllNews = async (req, res) => {
           limit: limitNum
         }
       },
-      message: 'News retrieved successfully'
+      message: 'Blogs retrieved successfully'
     });
   } catch (error) {
-    console.error('Error fetching news:', error);
+    console.error('Error fetching blogs:', error);
     return res.status(500).json({
       success: false,
-      message: 'Error fetching news',
+      message: 'Error fetching blogs',
       error: error.message
     });
   }
 };
 
-// Get public news (active only)
-exports.getPublicNews = async (req, res) => {
+// Get public blogs (active only)
+exports.getPublicBlogs = async (req, res) => {
   try {
     const {
       page = 1,
       limit = 10,
       category,
-      isTrending
+      featured
     } = req.query;
 
     // Parse query parameters
     const pageNum = parseInt(page);
     const limitNum = parseInt(limit);
     const skip = (pageNum - 1) * limitNum;
-    const isTrendingValue = isTrending === 'true' ? true : undefined;
+    const isFeatured = featured === 'true' ? true : undefined;
 
     // Build filter object
     const filter = {
       where: {
         isActive: true,
-        ...(isTrendingValue !== undefined && { isTrending: isTrendingValue }),
+        ...(isFeatured !== undefined && { isFeatured }),
         ...(category && { category: { contains: category, mode: 'insensitive' } })
       },
       orderBy: {
@@ -106,11 +113,11 @@ exports.getPublicNews = async (req, res) => {
     };
 
     // Count total records with filter
-    const totalCount = await prisma.news.count(filter);
+    const totalCount = await prisma.blog.count(filter);
     const totalPages = Math.ceil(totalCount / limitNum);
 
     // Get records with pagination
-    const news = await prisma.news.findMany({
+    const blogs = await prisma.blog.findMany({
       ...filter,
       skip,
       take: limitNum
@@ -119,7 +126,7 @@ exports.getPublicNews = async (req, res) => {
     return res.status(200).json({
       success: true,
       data: {
-        news,
+        blogs,
         pagination: {
           total: totalCount,
           pages: totalPages,
@@ -127,25 +134,25 @@ exports.getPublicNews = async (req, res) => {
           limit: limitNum
         }
       },
-      message: 'Public news retrieved successfully'
+      message: 'Public blogs retrieved successfully'
     });
   } catch (error) {
-    console.error('Error fetching public news:', error);
+    console.error('Error fetching public blogs:', error);
     return res.status(500).json({
       success: false,
-      message: 'Error fetching public news',
+      message: 'Error fetching public blogs',
       error: error.message
     });
   }
 };
 
-// Get trending news (active and trending only)
-exports.getTrendingNews = async (req, res) => {
+// Get featured blogs (active and featured only)
+exports.getFeaturedBlogs = async (req, res) => {
   try {
-    const news = await prisma.news.findMany({
+    const blogs = await prisma.blog.findMany({
       where: {
         isActive: true,
-        isTrending: true
+        isFeatured: true
       },
       orderBy: {
         createdAt: 'desc'
@@ -154,76 +161,78 @@ exports.getTrendingNews = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      data: news,
-      message: 'Trending news retrieved successfully'
+      data: blogs,
+      message: 'Featured blogs retrieved successfully'
     });
   } catch (error) {
-    console.error('Error fetching trending news:', error);
+    console.error('Error fetching featured blogs:', error);
     return res.status(500).json({
       success: false,
-      message: 'Error fetching trending news',
+      message: 'Error fetching featured blogs',
       error: error.message
     });
   }
 };
 
-// Get news by ID
-exports.getNewsById = async (req, res) => {
+// Get blog by ID
+exports.getBlogById = async (req, res) => {
   try {
     const { id } = req.params;
     
-    const news = await prisma.news.findUnique({
+    const blog = await prisma.blog.findUnique({
       where: { id }
     });
 
-    if (!news) {
+    if (!blog) {
       return res.status(404).json({
         success: false,
-        message: 'News not found'
+        message: 'Blog not found'
       });
     }
 
     return res.status(200).json({
       success: true,
-      data: news,
-      message: 'News retrieved successfully'
+      data: blog,
+      message: 'Blog retrieved successfully'
     });
   } catch (error) {
-    console.error('Error fetching news:', error);
+    console.error('Error fetching blog:', error);
     return res.status(500).json({
       success: false,
-      message: 'Error fetching news',
+      message: 'Error fetching blog',
       error: error.message
     });
   }
 };
 
-// Upload image to Cloudinary
-const uploadImageToCloudinary = async (imageBuffer) => {
+// Upload PDF to Cloudinary
+const uploadPdfToCloudinary = async (pdfBuffer) => {
   return new Promise((resolve, reject) => {
-    const uploadOptions = {
-      resource_type: 'image',
-      folder: 'news_images',
-    };
-
-    cloudinary.uploader.upload_stream(uploadOptions, (error, result) => {
-      if (error) {
-        reject(error);
-      } else {
-        resolve(result.secure_url);
+    cloudinary.uploader.upload_stream(
+      {
+        resource_type: 'raw',
+        folder: 'blog_pdfs',
+        format: 'pdf',
+      },
+      (error, result) => {
+        if (error) {
+          reject(error);
+        } else {
+          resolve(result.secure_url);
+        }
       }
-    }).end(imageBuffer);
+    ).end(pdfBuffer);
   });
 };
 
-// Create new news
-exports.createNews = async (req, res) => {
+// Create new blog
+exports.createBlog = async (req, res) => {
   try {
     const {
       title,
       content,
       category,
-      isTrending = false,
+      isFeatured = false,
       isActive = true
     } = req.body;
 
@@ -235,225 +244,229 @@ exports.createNews = async (req, res) => {
       });
     }
 
-    // Handle image upload if present
-    let imageUrl = null;
+    let pdfUrl = null;
+
+    // Check if PDF file was uploaded
     if (req.file) {
       try {
-        imageUrl = await uploadImageToCloudinary(req.file.buffer);
+        // Upload PDF to Cloudinary
+        pdfUrl = await uploadPdfToCloudinary(req.file.buffer);
       } catch (uploadError) {
-        console.error('Error uploading image:', uploadError);
+        console.error('Error uploading PDF to Cloudinary:', uploadError);
         return res.status(500).json({
           success: false,
-          message: 'Error uploading image',
+          message: 'Error uploading PDF file',
           error: uploadError.message
         });
       }
     }
 
-    const news = await prisma.news.create({
+    const blog = await prisma.blog.create({
       data: {
         title,
         content,
         category,
-        isTrending: Boolean(isTrending),
+        isFeatured: Boolean(isFeatured),
         isActive: Boolean(isActive),
-        imageUrl
+        ...(pdfUrl && { pdfUrl })
       }
     });
 
     return res.status(201).json({
       success: true,
-      data: news,
-      message: 'News created successfully'
+      data: blog,
+      message: 'Blog created successfully'
     });
   } catch (error) {
-    console.error('Error creating news:', error);
+    console.error('Error creating blog:', error);
     return res.status(500).json({
       success: false,
-      message: 'Error creating news',
+      message: 'Error creating blog',
       error: error.message
     });
   }
 };
 
-// Update news
-exports.updateNews = async (req, res) => {
+// Update blog
+exports.updateBlog = async (req, res) => {
   try {
     const { id } = req.params;
     const {
       title,
       content,
       category,
-      isTrending,
+      isFeatured,
       isActive
     } = req.body;
 
-    // Check if news exists
-    const existingNews = await prisma.news.findUnique({
+    // Check if blog exists
+    const existingBlog = await prisma.blog.findUnique({
       where: { id }
     });
 
-    if (!existingNews) {
+    if (!existingBlog) {
       return res.status(404).json({
         success: false,
-        message: 'News not found'
+        message: 'Blog not found'
       });
     }
 
-    // Handle image upload if present
-    let imageUrl = undefined;
+    let pdfUrl = existingBlog.pdfUrl;
+
+    // Check if new PDF file was uploaded
     if (req.file) {
       try {
-        imageUrl = await uploadImageToCloudinary(req.file.buffer);
+        // Upload new PDF to Cloudinary
+        pdfUrl = await uploadPdfToCloudinary(req.file.buffer);
       } catch (uploadError) {
-        console.error('Error uploading image:', uploadError);
+        console.error('Error uploading PDF to Cloudinary:', uploadError);
         return res.status(500).json({
           success: false,
-          message: 'Error uploading image',
+          message: 'Error uploading PDF file',
           error: uploadError.message
         });
       }
     }
 
-    // Update news
-    const updatedNews = await prisma.news.update({
+    // Update blog
+    const updatedBlog = await prisma.blog.update({
       where: { id },
       data: {
         ...(title !== undefined && { title }),
         ...(content !== undefined && { content }),
         ...(category !== undefined && { category }),
-        ...(isTrending !== undefined && { isTrending }),
+        ...(isFeatured !== undefined && { isFeatured }),
         ...(isActive !== undefined && { isActive }),
-        ...(imageUrl !== undefined && { imageUrl })
+        ...(pdfUrl !== existingBlog.pdfUrl && { pdfUrl })
       }
     });
 
     return res.status(200).json({
       success: true,
-      data: updatedNews,
-      message: 'News updated successfully'
+      data: updatedBlog,
+      message: 'Blog updated successfully'
     });
   } catch (error) {
-    console.error('Error updating news:', error);
+    console.error('Error updating blog:', error);
     return res.status(500).json({
       success: false,
-      message: 'Error updating news',
+      message: 'Error updating blog',
       error: error.message
     });
   }
 };
 
-// Delete news
-exports.deleteNews = async (req, res) => {
+// Delete blog
+exports.deleteBlog = async (req, res) => {
   try {
     const { id } = req.params;
 
-    // Check if news exists
-    const existingNews = await prisma.news.findUnique({
+    // Check if blog exists
+    const existingBlog = await prisma.blog.findUnique({
       where: { id }
     });
 
-    if (!existingNews) {
+    if (!existingBlog) {
       return res.status(404).json({
         success: false,
-        message: 'News not found'
+        message: 'Blog not found'
       });
     }
 
-    // Delete news
-    await prisma.news.delete({
+    // Delete blog
+    await prisma.blog.delete({
       where: { id }
     });
 
     return res.status(200).json({
       success: true,
-      message: 'News deleted successfully'
+      message: 'Blog deleted successfully'
     });
   } catch (error) {
-    console.error('Error deleting news:', error);
+    console.error('Error deleting blog:', error);
     return res.status(500).json({
       success: false,
-      message: 'Error deleting news',
+      message: 'Error deleting blog',
       error: error.message
     });
   }
 };
 
-// Toggle news status
-exports.toggleNewsStatus = async (req, res) => {
+// Toggle blog status
+exports.toggleBlogStatus = async (req, res) => {
   try {
     const { id } = req.params;
 
-    // Check if news exists
-    const existingNews = await prisma.news.findUnique({
+    // Check if blog exists
+    const existingBlog = await prisma.blog.findUnique({
       where: { id }
     });
 
-    if (!existingNews) {
+    if (!existingBlog) {
       return res.status(404).json({
         success: false,
-        message: 'News not found'
+        message: 'Blog not found'
       });
     }
 
     // Toggle status
-    const updatedNews = await prisma.news.update({
+    const updatedBlog = await prisma.blog.update({
       where: { id },
       data: {
-        isActive: !existingNews.isActive
+        isActive: !existingBlog.isActive
       }
     });
 
     return res.status(200).json({
       success: true,
-      data: updatedNews,
-      message: 'News status toggled successfully'
+      data: updatedBlog,
+      message: 'Blog status toggled successfully'
     });
   } catch (error) {
-    console.error('Error toggling news status:', error);
+    console.error('Error toggling blog status:', error);
     return res.status(500).json({
       success: false,
-      message: 'Error toggling news status',
+      message: 'Error toggling blog status',
       error: error.message
     });
   }
 };
 
-// Toggle trending status
-exports.toggleTrendingStatus = async (req, res) => {
+// Toggle featured status
+exports.toggleFeaturedStatus = async (req, res) => {
   try {
     const { id } = req.params;
 
-    // Check if news exists
-    const existingNews = await prisma.news.findUnique({
+    // Check if blog exists
+    const existingBlog = await prisma.blog.findUnique({
       where: { id }
     });
 
-    if (!existingNews) {
+    if (!existingBlog) {
       return res.status(404).json({
         success: false,
-        message: 'News not found'
+        message: 'Blog not found'
       });
     }
 
-    // Toggle trending status
-    const updatedNews = await prisma.news.update({
+    // Toggle featured status
+    const updatedBlog = await prisma.blog.update({
       where: { id },
       data: {
-        isTrending: !existingNews.isTrending
+        isFeatured: !existingBlog.isFeatured
       }
     });
 
     return res.status(200).json({
       success: true,
-      data: updatedNews,
-      message: 'News trending status toggled successfully'
+      data: updatedBlog,
+      message: 'Blog featured status toggled successfully'
     });
   } catch (error) {
-    console.error('Error toggling news trending status:', error);
+    console.error('Error toggling featured status:', error);
     return res.status(500).json({
       success: false,
-      message: 'Error toggling news trending status',
+      message: 'Error toggling featured status',
       error: error.message
     });
   }

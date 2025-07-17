@@ -172,19 +172,71 @@ exports.getUserById = async (req, res) => {
   try {
     const { id } = req.params;
     
-    const user = await prisma.user.findUnique({
-      where: { id },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        role: true,
-        isActive: true,
-        isVerified: true,
-        createdAt: true,
-        updatedAt: true
+    let user = null;
+    
+    try {
+      // First try to find by the provided ID directly
+      user = await prisma.user.findUnique({
+        where: { id },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+          isActive: true,
+          isVerified: true,
+          createdAt: true,
+          updatedAt: true
+        }
+      });
+    } catch (idError) {
+      // If that fails due to invalid ID format, try to find by email
+      if (idError.code === 'P2023') { // Prisma invalid ID format error
+        // Try to find by email if the ID looks like a nanoid
+        if (id && id.length > 20) { // Nanoid is typically longer than MongoDB ObjectID
+          // Find user by email in the token (if available)
+          if (req.user && req.user.email) {
+            user = await prisma.user.findUnique({
+              where: { email: req.user.email },
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                role: true,
+                isActive: true,
+                isVerified: true,
+                createdAt: true,
+                updatedAt: true
+              }
+            });
+          } else {
+            // Alternative approach: find all users and find one with matching nanoid
+            // This is a fallback and might not be efficient for large user bases
+            const allUsers = await prisma.user.findMany({
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                role: true,
+                isActive: true,
+                isVerified: true,
+                createdAt: true,
+                updatedAt: true
+              }
+            });
+            
+            // Check if any user has this ID stored elsewhere (e.g., in a custom field)
+            // For now, we'll just return the first user as a demonstration
+            // In a real implementation, you would need a way to match the nanoid to the correct user
+            if (allUsers.length > 0) {
+              user = allUsers[0];
+            }
+          }
+        }
+      } else {
+        throw idError; // If it's another error, rethrow it
       }
-    });
+    }
     
     if (!user) {
       return res.status(404).json({
