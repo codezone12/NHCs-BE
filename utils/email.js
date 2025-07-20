@@ -62,7 +62,7 @@ exports.sendTemplatedEmail = async ({ to, subject, template, context }) => {
 
     // Send email
     const mailOptions = {
-      from: `"${process.env.EMAIL_FROM_NAME}" <${process.env.EMAIL_FROM_ADDRESS}>`,
+      from: `"${process.env.EMAIL_FROM_NAME || 'Alenalki News'}" <${process.env.EMAIL_FROM_ADDRESS || process.env.EMAIL_FROM}>`,
       to,
       subject,
       html
@@ -233,4 +233,25 @@ exports.sendNewsletterToSubscribers = async (newsletterData) => {
     console.error('Newsletter sending error:', error);
     throw error;
   }
+};
+
+/**
+ * Send account creation notification email
+ * @param {Object} userData - User data including email, name, and role
+ */
+exports.sendAccountCreationEmail = async (userData) => {
+  const { email, name, role } = userData;
+
+  await exports.sendTemplatedEmail({
+    to: email,
+    subject: 'Your Account Has Been Created',
+    template: 'account-created',
+    context: {
+      name: name || email.split('@')[0],
+      email,
+      role: role || 'User',
+      loginUrl: `${process.env.CLIENT_URL}/login`,
+      supportEmail: process.env.ADMIN_EMAIL || 'info@alenalki.se'
+    }
+  });
 };

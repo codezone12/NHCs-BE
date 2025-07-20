@@ -76,6 +76,33 @@ exports.createUser = async (req, res) => {
       }
     });
     
+    // Send account creation email notification
+    try {
+      const { sendAccountCreationEmail } = require('../utils/email');
+      console.log('Attempting to send account creation email to:', user.email);
+      
+      // Log email configuration for debugging (remove sensitive info in production)
+      console.log('Email configuration:', {
+        host: process.env.EMAIL_HOST,
+        port: process.env.EMAIL_PORT,
+        secure: process.env.EMAIL_SECURE === 'true',
+        user: process.env.EMAIL_USER ? 'Set' : 'Not set',
+        pass: process.env.EMAIL_PASS ? 'Set' : 'Not set',
+        from: process.env.EMAIL_FROM_ADDRESS || 'Not set'
+      });
+      
+      await sendAccountCreationEmail({
+        email: user.email,
+        name: user.name || user.email.split('@')[0],
+        role: user.role
+      });
+      
+      console.log('Account creation email sent successfully to:', user.email);
+    } catch (emailError) {
+      console.error('Failed to send account creation email:', emailError);
+      // Continue with the response even if email fails
+    }
+    
     res.status(201).json({
       success: true,
       message: 'User created successfully',

@@ -11,12 +11,13 @@ const transportationController = require('../controllers/transportationControlle
 const newsController = require('../controllers/newsController');
 const blogController = require('../controllers/blogController');
 const multer = require('multer');
+const { protect, restrictTo, optionalAuth } = require('../middleware/authMiddleware');
 
 // Configure multer for memory storage (for Cloudinary uploads)
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
-// Auth routes
+// Auth routes - public
 router.post('/signup', authController.signup);
 router.post('/login', authController.login);
 router.post('/forgot-password', authController.forgotPassword);
@@ -24,78 +25,78 @@ router.post('/verify-otp', authController.verifyOtp);
 router.post('/reset-password', authController.resetPassword); // Changed from '/reset-password/:token'
 router.get('/logout', authController.logout);
 
-// Contact routes
+// Contact routes - public
 router.post('/contact', contactController.submitContactForm);
 
-// User management routes (typically protected and admin-only)
-router.post('/user/', userController.createUser);                    // Create user
-router.get('/user/', userController.getUsers);                       // Get all users with pagination
-router.get('/user/:id', userController.getUserById);                 // Get user by ID
-router.put('/user/:id', userController.updateUser);                  // Update user (all fields optional)
-router.patch('/user/:id/password', userController.updateUserPassword); // Update user password
-router.patch('/user/:id/toggle-status', userController.toggleUserStatus); // Toggle active status
-router.delete('/user/:id', userController.deleteUser);               // Delete user
+// User management routes (protected and admin-only)
+router.post('/user/', protect, restrictTo('ADMIN'), userController.createUser);                    // Create user
+router.get('/user/', protect, restrictTo('ADMIN', 'EDITOR'), userController.getUsers);             // Get all users with pagination
+router.get('/user/:id', protect, restrictTo('ADMIN', 'EDITOR'), userController.getUserById);       // Get user by ID
+router.put('/user/:id', protect, restrictTo('ADMIN'), userController.updateUser);                  // Update user (all fields optional)
+router.patch('/user/:id/password', protect, restrictTo('ADMIN'), userController.updateUserPassword); // Update user password
+router.patch('/user/:id/toggle-status', protect, restrictTo('ADMIN'), userController.toggleUserStatus); // Toggle active status
+router.delete('/user/:id', protect, restrictTo('ADMIN'), userController.deleteUser);               // Delete user
 
-// Newsletter routes
-router.post('/newsletter/subscribe', newsletterController.subscribeToNewsletter);
-router.post('/newsletter/unsubscribe', newsletterController.unsubscribeFromNewsletter);
-router.get('/newsletter/stats', newsletterController.getNewsletterStats);
+// Newsletter routes - mixed access
+router.post('/newsletter/subscribe', newsletterController.subscribeToNewsletter);       // Public
+router.post('/newsletter/unsubscribe', newsletterController.unsubscribeFromNewsletter); // Public
+router.get('/newsletter/stats', protect, restrictTo('ADMIN', 'EDITOR'), newsletterController.getNewsletterStats); // Protected
 
-// Event management routes
-router.post('/events', eventController.createEvent);                 // Create event
-router.get('/events', eventController.getEvents);                    // Get all events with pagination
-router.get('/events/:id', eventController.getEventById);             // Get event by ID
-router.put('/events/:id', eventController.updateEvent);              // Update event (all fields optional)
-router.patch('/events/:id/toggle-status', eventController.toggleEventStatus); // Toggle active status
-router.delete('/events/:id', eventController.deleteEvent);           // Delete event
+// Event management routes - ADMIN only
+router.post('/events', protect, restrictTo('ADMIN'), eventController.createEvent);                 // Create event
+router.get('/events', protect, restrictTo('ADMIN', 'EDITOR'), eventController.getEvents);          // Get all events with pagination
+router.get('/events/:id', optionalAuth, eventController.getEventById);                                   // Get event by ID - public with auth optional
+router.put('/events/:id', protect, restrictTo('ADMIN'), eventController.updateEvent);              // Update event (all fields optional)
+router.patch('/events/:id/toggle-status', protect, restrictTo('ADMIN'), eventController.toggleEventStatus); // Toggle active status
+router.delete('/events/:id', protect, restrictTo('ADMIN'), eventController.deleteEvent);           // Delete event
 
-// Festival Events routes
-router.post('/festival-events', festivalEventController.createFestivalEvent);                 // Create festival event
-router.get('/festival-events', festivalEventController.getFestivalEvents);                    // Get all festival events with pagination
-router.get('/festival-events/public', festivalEventController.getPublicFestivalEvents);       // Get public festival events (active only)
-router.get('/festival-events/:id', festivalEventController.getFestivalEventById);             // Get festival event by ID
-router.put('/festival-events/:id', festivalEventController.updateFestivalEvent);              // Update festival event
-router.patch('/festival-events/:id/toggle-status', festivalEventController.toggleFestivalEventStatus); // Toggle active status
-router.delete('/festival-events/:id', festivalEventController.deleteFestivalEvent);           // Delete festival event
+// Festival Events routes - ADMIN only
+router.post('/festival-events', protect, restrictTo('ADMIN'), festivalEventController.createFestivalEvent);                 // Create festival event
+router.get('/festival-events', protect, restrictTo('ADMIN', 'EDITOR'), festivalEventController.getFestivalEvents);          // Get all festival events with pagination
+router.get('/festival-events/public', festivalEventController.getPublicFestivalEvents);                                           // Get public festival events (active only) - public
+router.get('/festival-events/:id', optionalAuth, festivalEventController.getFestivalEventById);                                   // Get festival event by ID - public with auth optional
+router.put('/festival-events/:id', protect, restrictTo('ADMIN'), festivalEventController.updateFestivalEvent);              // Update festival event
+router.patch('/festival-events/:id/toggle-status', protect, restrictTo('ADMIN'), festivalEventController.toggleFestivalEventStatus); // Toggle active status
+router.delete('/festival-events/:id', protect, restrictTo('ADMIN'), festivalEventController.deleteFestivalEvent);           // Delete festival event
 
-// Festival Highlights routes
-router.post('/festival-highlights', festivalHighlightController.createFestivalHighlight);                 // Create highlight
-router.get('/festival-highlights', festivalHighlightController.getFestivalHighlights);                    // Get all highlights with pagination
-router.get('/festival-highlights/public', festivalHighlightController.getPublicFestivalHighlights);       // Get public highlights (active only)
-router.get('/festival-highlights/:id', festivalHighlightController.getFestivalHighlightById);             // Get highlight by ID
-router.put('/festival-highlights/:id', festivalHighlightController.updateFestivalHighlight);              // Update highlight
-router.patch('/festival-highlights/:id/toggle-status', festivalHighlightController.toggleFestivalHighlightStatus); // Toggle active status
-router.delete('/festival-highlights/:id', festivalHighlightController.deleteFestivalHighlight);           // Delete highlight
+// Festival Highlights routes - ADMIN only
+router.post('/festival-highlights', protect, restrictTo('ADMIN'), festivalHighlightController.createFestivalHighlight);                 // Create highlight
+router.get('/festival-highlights', protect, restrictTo('ADMIN', 'EDITOR'), festivalHighlightController.getFestivalHighlights);          // Get all highlights with pagination
+router.get('/festival-highlights/public', festivalHighlightController.getPublicFestivalHighlights);                                           // Get public highlights (active only) - public
+router.get('/festival-highlights/:id', optionalAuth, festivalHighlightController.getFestivalHighlightById);                                   // Get highlight by ID - public with auth optional
+router.put('/festival-highlights/:id', protect, restrictTo('ADMIN'), festivalHighlightController.updateFestivalHighlight);              // Update highlight
+router.patch('/festival-highlights/:id/toggle-status', protect, restrictTo('ADMIN'), festivalHighlightController.toggleFestivalHighlightStatus); // Toggle active status
+router.delete('/festival-highlights/:id', protect, restrictTo('ADMIN'), festivalHighlightController.deleteFestivalHighlight);           // Delete highlight
 
-// Transportation routes
-router.post('/transportations', transportationController.createTransportation);                 // Create transportation option
-router.get('/transportations', transportationController.getAllTransportations);                 // Get all transportation options with pagination
-router.get('/transportations/public', transportationController.getPublicTransportations);       // Get public transportation options (active only)
-router.get('/transportations/:id', transportationController.getTransportationById);             // Get transportation option by ID
-router.put('/transportations/:id', transportationController.updateTransportation);              // Update transportation option
-router.patch('/transportations/:id/toggle-status', transportationController.toggleTransportationStatus); // Toggle active status
-router.delete('/transportations/:id', transportationController.deleteTransportation);           // Delete transportation option
+// Transportation routes - ADMIN only
+router.post('/transportations', protect, restrictTo('ADMIN'), transportationController.createTransportation);                 // Create transportation option
+router.get('/transportations', protect, restrictTo('ADMIN', 'EDITOR'), transportationController.getAllTransportations);       // Get all transportation options with pagination
+router.get('/transportations/public', transportationController.getPublicTransportations);                                           // Get public transportation options (active only) - public
+router.get('/transportations/:id', optionalAuth, transportationController.getTransportationById);                                   // Get transportation option by ID - public with auth optional
+router.put('/transportations/:id', protect, restrictTo('ADMIN'), transportationController.updateTransportation);              // Update transportation option
+router.patch('/transportations/:id/toggle-status', protect, restrictTo('ADMIN'), transportationController.toggleTransportationStatus); // Toggle active status
+router.delete('/transportations/:id', protect, restrictTo('ADMIN'), transportationController.deleteTransportation);           // Delete transportation option
 
-// News routes
-router.post('/news', upload.single('imageFile'), newsController.createNews);                 // Create news with optional image upload
-router.get('/news', newsController.getAllNews);                  // Get all news with pagination
-router.get('/news/public', newsController.getPublicNews);        // Get public news (active only)
-router.get('/news/trending', newsController.getTrendingNews);    // Get trending news
-router.get('/news/:id', newsController.getNewsById);             // Get news by ID
-router.put('/news/:id', upload.single('imageFile'), newsController.updateNews);              // Update news with optional image upload
-router.patch('/news/:id/toggle-status', newsController.toggleNewsStatus); // Toggle active status
-router.patch('/news/:id/toggle-trending', newsController.toggleTrendingStatus); // Toggle trending status
-router.delete('/news/:id', newsController.deleteNews);           // Delete news
+// News routes - EDITORs and ADMIN can manage
+router.post('/news', protect, restrictTo('ADMIN', 'EDITOR'), upload.single('imageFile'), newsController.createNews);                 // Create news with optional image upload
+router.get('/news', protect, restrictTo('ADMIN', 'EDITOR'), newsController.getAllNews);                                              // Get all news with pagination
+router.get('/news/public', newsController.getPublicNews);                                                                                  // Get public news (active only) - public
+router.get('/news/trending', newsController.getTrendingNews);                                                                              // Get trending news - public
+router.get('/news/:id', optionalAuth, newsController.getNewsById);                                                                         // Get news by ID - public with auth optional
+router.put('/news/:id', protect, restrictTo('ADMIN', 'EDITOR'), upload.single('imageFile'), newsController.updateNews);              // Update news with optional image upload
+router.patch('/news/:id/toggle-status', protect, restrictTo('ADMIN', 'EDITOR'), newsController.toggleNewsStatus);                    // Toggle active status
+router.patch('/news/:id/toggle-trending', protect, restrictTo('ADMIN', 'EDITOR'), newsController.toggleTrendingStatus);              // Toggle trending status
+router.delete('/news/:id', protect, restrictTo('ADMIN', 'EDITOR'), newsController.deleteNews);                                       // Delete news
 
-// Blog routes
-router.post('/blogs', upload.single('pdfFile'), blogController.createBlog);                 // Create blog with optional PDF upload
-router.get('/blogs', blogController.getAllBlogs);                  // Get all blogs with pagination
-router.get('/blogs/public', blogController.getPublicBlogs);        // Get public blogs (active only)
-router.get('/blogs/featured', blogController.getFeaturedBlogs);    // Get featured blogs
-router.get('/blogs/:id', blogController.getBlogById);             // Get blog by ID
-router.put('/blogs/:id', upload.single('pdfFile'), blogController.updateBlog);              // Update blog with optional PDF upload
-router.patch('/blogs/:id/toggle-status', blogController.toggleBlogStatus); // Toggle active status
-router.patch('/blogs/:id/toggle-featured', blogController.toggleFeaturedStatus); // Toggle featured status
-router.delete('/blogs/:id', blogController.deleteBlog);           // Delete blog
+// Blog routes - EDITORs and ADMIN can manage
+router.post('/blogs', protect, restrictTo('ADMIN', 'EDITOR'), upload.single('pdfFile'), blogController.createBlog);                 // Create blog with optional PDF upload
+router.get('/blogs', protect, restrictTo('ADMIN', 'EDITOR'), blogController.getAllBlogs);                                           // Get all blogs with pagination
+router.get('/blogs/public', blogController.getPublicBlogs);                                                                               // Get public blogs (active only) - public
+router.get('/blogs/featured', blogController.getFeaturedBlogs);                                                                           // Get featured blogs - public
+router.get('/blogs/:id', optionalAuth, blogController.getBlogById);                                                                       // Get blog by ID - public with auth optional
+router.put('/blogs/:id', protect, restrictTo('ADMIN', 'EDITOR'), upload.single('pdfFile'), blogController.updateBlog);              // Update blog with optional PDF upload
+router.patch('/blogs/:id/toggle-status', protect, restrictTo('ADMIN', 'EDITOR'), blogController.toggleBlogStatus);                  // Toggle active status
+router.patch('/blogs/:id/toggle-featured', protect, restrictTo('ADMIN', 'EDITOR'), blogController.toggleFeaturedStatus);            // Toggle featured status
+router.delete('/blogs/:id', protect, restrictTo('ADMIN', 'EDITOR'), blogController.deleteBlog);                                     // Delete blog
 
 module.exports = router;
