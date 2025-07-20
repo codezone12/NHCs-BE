@@ -43,8 +43,8 @@ router.post('/newsletter/unsubscribe', newsletterController.unsubscribeFromNewsl
 router.get('/newsletter/stats', protect, restrictTo('ADMIN', 'EDITOR'), newsletterController.getNewsletterStats); // Protected
 
 // Event management routes - ADMIN only
-router.post('/events', protect, restrictTo('ADMIN'), eventController.createEvent);                 // Create event
-router.get('/events', protect, restrictTo('ADMIN', 'EDITOR'), eventController.getEvents);          // Get all events with pagination
+router.post('/events', eventController.createEvent);                 // Create event
+router.get('/events', eventController.getEvents);          // Get all events with pagination
 router.get('/events/:id', optionalAuth, eventController.getEventById);                                   // Get event by ID - public with auth optional
 router.put('/events/:id', protect, restrictTo('ADMIN'), eventController.updateEvent);              // Update event (all fields optional)
 router.patch('/events/:id/toggle-status', protect, restrictTo('ADMIN'), eventController.toggleEventStatus); // Toggle active status
@@ -52,7 +52,7 @@ router.delete('/events/:id', protect, restrictTo('ADMIN'), eventController.delet
 
 // Festival Events routes - ADMIN only
 router.post('/festival-events', protect, restrictTo('ADMIN'), festivalEventController.createFestivalEvent);                 // Create festival event
-router.get('/festival-events', protect, restrictTo('ADMIN', 'EDITOR'), festivalEventController.getFestivalEvents);          // Get all festival events with pagination
+router.get('/festival-events', festivalEventController.getFestivalEvents);          // Get all festival events with pagination
 router.get('/festival-events/public', festivalEventController.getPublicFestivalEvents);                                           // Get public festival events (active only) - public
 router.get('/festival-events/:id', optionalAuth, festivalEventController.getFestivalEventById);                                   // Get festival event by ID - public with auth optional
 router.put('/festival-events/:id', protect, restrictTo('ADMIN'), festivalEventController.updateFestivalEvent);              // Update festival event
@@ -61,7 +61,7 @@ router.delete('/festival-events/:id', protect, restrictTo('ADMIN'), festivalEven
 
 // Festival Highlights routes - ADMIN only
 router.post('/festival-highlights', protect, restrictTo('ADMIN'), festivalHighlightController.createFestivalHighlight);                 // Create highlight
-router.get('/festival-highlights', protect, restrictTo('ADMIN', 'EDITOR'), festivalHighlightController.getFestivalHighlights);          // Get all highlights with pagination
+router.get('/festival-highlights', festivalHighlightController.getFestivalHighlights);          // Get all highlights with pagination
 router.get('/festival-highlights/public', festivalHighlightController.getPublicFestivalHighlights);                                           // Get public highlights (active only) - public
 router.get('/festival-highlights/:id', optionalAuth, festivalHighlightController.getFestivalHighlightById);                                   // Get highlight by ID - public with auth optional
 router.put('/festival-highlights/:id', protect, restrictTo('ADMIN'), festivalHighlightController.updateFestivalHighlight);              // Update highlight
@@ -70,7 +70,7 @@ router.delete('/festival-highlights/:id', protect, restrictTo('ADMIN'), festival
 
 // Transportation routes - ADMIN only
 router.post('/transportations', protect, restrictTo('ADMIN'), transportationController.createTransportation);                 // Create transportation option
-router.get('/transportations', protect, restrictTo('ADMIN', 'EDITOR'), transportationController.getAllTransportations);       // Get all transportation options with pagination
+router.get('/transportations', transportationController.getAllTransportations);       // Get all transportation options with pagination
 router.get('/transportations/public', transportationController.getPublicTransportations);                                           // Get public transportation options (active only) - public
 router.get('/transportations/:id', optionalAuth, transportationController.getTransportationById);                                   // Get transportation option by ID - public with auth optional
 router.put('/transportations/:id', protect, restrictTo('ADMIN'), transportationController.updateTransportation);              // Update transportation option
@@ -79,7 +79,7 @@ router.delete('/transportations/:id', protect, restrictTo('ADMIN'), transportati
 
 // News routes - EDITORs and ADMIN can manage
 router.post('/news', protect, restrictTo('ADMIN', 'EDITOR'), upload.single('imageFile'), newsController.createNews);                 // Create news with optional image upload
-router.get('/news', protect, restrictTo('ADMIN', 'EDITOR'), newsController.getAllNews);                                              // Get all news with pagination
+router.get('/news', newsController.getAllNews);                                              // Get all news with pagination
 router.get('/news/public', newsController.getPublicNews);                                                                                  // Get public news (active only) - public
 router.get('/news/trending', newsController.getTrendingNews);                                                                              // Get trending news - public
 router.get('/news/:id', optionalAuth, newsController.getNewsById);                                                                         // Get news by ID - public with auth optional
@@ -90,7 +90,7 @@ router.delete('/news/:id', protect, restrictTo('ADMIN', 'EDITOR'), newsControlle
 
 // Blog routes - EDITORs and ADMIN can manage
 router.post('/blogs', protect, restrictTo('ADMIN', 'EDITOR'), upload.single('pdfFile'), blogController.createBlog);                 // Create blog with optional PDF upload
-router.get('/blogs', protect, restrictTo('ADMIN', 'EDITOR'), blogController.getAllBlogs);                                           // Get all blogs with pagination
+router.get('/blogs', blogController.getAllBlogs);                                           // Get all blogs with pagination
 router.get('/blogs/public', blogController.getPublicBlogs);                                                                               // Get public blogs (active only) - public
 router.get('/blogs/featured', blogController.getFeaturedBlogs);                                                                           // Get featured blogs - public
 router.get('/blogs/:id', optionalAuth, blogController.getBlogById);                                                                       // Get blog by ID - public with auth optional
